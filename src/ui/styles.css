@@ -210,8 +210,28 @@ body {
   opacity: 0.35;
 }
 .mood__streak {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
   font-size: 10.5px;
   color: var(--muted);
+}
+/* めあての数値。行を増やさずに常に見えている状態にする */
+.mood__streak b {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+/* このゲージが目的だと言い切るための札 */
+.mood__tag {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 9.5px;
+  font-weight: 700;
+  vertical-align: 1px;
 }
 
 /* ── りみっち(プレイヤー本人) ─────────────── */
@@ -329,9 +349,27 @@ body {
   font-size: 11px;
   color: var(--muted);
 }
+.recall__title > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .recall__title small {
+  flex: 0 0 auto;
   font-size: 10px;
   text-decoration: underline;
+}
+/* 目的ではなく手だて、という位置づけを見出しで言い切る */
+.recall__kind {
+  margin-right: 5px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-panel);
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 700;
 }
 .recall__row {
   display: grid;
@@ -1061,6 +1099,73 @@ body {
   color: var(--down);
 }
 
+/* ── めあて ───────────────────────────────── */
+
+/*
+  目的は「まきこのごきげん」ひとつ。
+  初日の朝と、めあてシートの先頭で、同じ文言(GOAL_TEXT)を出す。
+*/
+.aim {
+  margin-bottom: 14px;
+  padding: 11px 13px 13px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-panel));
+}
+.aim__label {
+  display: inline-block;
+  margin-bottom: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 10.5px;
+  font-weight: 700;
+}
+.aim__main {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+.aim__list {
+  margin: 7px 0 0;
+  padding-left: 1.2em;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+/* おわりの画面の合否。エンドの種類より先に読ませる */
+.verdict {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+.verdict.is-ok {
+  background: color-mix(in srgb, var(--up) 18%, transparent);
+}
+.verdict.is-ng {
+  background: color-mix(in srgb, var(--down) 18%, transparent);
+}
+.verdict__label {
+  flex: 0 0 auto;
+  font-size: 15px;
+  font-weight: 700;
+}
+.verdict.is-ok .verdict__label {
+  color: var(--up);
+}
+.verdict.is-ng .verdict__label {
+  color: var(--down);
+}
+
 /* ── 記憶のはなし(シート内) ───────────────── */
 
 /* しきい値と、そこで実際に変わることを1行ずつ並べる */
@@ -1283,7 +1388,8 @@ button:focus-visible {
   .me__line {
     display: none;
   }
-  .recall__title {
+  /* 「手だて」の語は目的との区別なので残し、案内文だけ落とす */
+  .recall__title small {
     display: none;
   }
   .me,

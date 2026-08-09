@@ -476,3 +476,20 @@ export const ENDING = {
   /** 「大丈夫だよ」をこの回数以上聞いてもルートに入る */
   whisperCount: 8,
 } as const
+
+/**
+ * ══ 目的の言い方 ══
+ * 目的は「30日後のまきこのごきげん」ひとつだけ。
+ * 記憶度・仕込み・スイーツは、ぜんぶそのための手だて。
+ *
+ * 表現がぶれると「どっちが目的なのか」が分からなくなるので、
+ * UI で目的に触れるときは必ずここの文言を使う。
+ */
+export const GOAL_TEXT = {
+  aim: `30日後、まきこのごきげんを ${ENDING.moodPerfect} 以上にする`,
+  short: `めあて ${ENDING.moodPerfect}`,
+  pass: `${ENDING.moodOk} 以上なら「まあ満足」`,
+  read: 'まきこは要求を遠回しにしか言わない。当てると機嫌が上がる',
+  means: '記憶度・仕込み・スイーツは、ぜんぶ機嫌をとるための手だて',
+  memoryIsMeans: '忘れられると、機嫌をとる手が減る',
+} as const

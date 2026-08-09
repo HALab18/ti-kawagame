@@ -6,6 +6,7 @@ import {
   EMOTION_NAMES,
   GACHA,
   GIFT,
+  GOAL_TEXT,
   KEEPSAKE,
   MAX_EQUIPPED,
   MEET,
@@ -104,7 +105,7 @@ const LADDER: Array<{ stage: ForgetStage; at: string; what: string }> = [
 
 type NightMode = 'menu' | 'gift' | 'keepsake'
 /** 下から出るシート。持ち物と、記憶の説明 */
-type SheetId = 'stock' | 'memory' | null
+type SheetId = 'stock' | 'aim' | null
 
 export function App() {
   const game = useGame()
@@ -147,7 +148,10 @@ export function App() {
           <Character id="makiko" face={makiko.face} animated={makiko.animated} className="chr--xs" />
           <div className="mood__main">
             <div className="mood__head">
-              <span>まきこのごきげん</span>
+              {/* 目的はこれひとつ。ゲージそのものに書いておく */}
+              <span>
+                まきこのごきげん<b className="mood__tag">目的</b>
+              </span>
               <span className="mood__label">
                 {game.moodLabel} <b>{state.mood}</b>
               </span>
@@ -158,9 +162,12 @@ export function App() {
               <span className="mood__goal" style={{ left: '85%' }} />
             </div>
             <small className="mood__streak">
-              {state.mood >= 70
-                ? `ごきげん ${state.moodStreak}日連続 / あと${streakToReward(state, REWARD_STREAK)}日でごほうび`
-                : 'ごきげんを70以上で保つとごほうびがもらえる'}
+              <span>
+                {state.mood >= 70
+                  ? `ごきげん ${state.moodStreak}日連続 / あと${streakToReward(state, REWARD_STREAK)}日でごほうび`
+                  : 'ごきげんを70以上で保つとごほうび'}
+              </span>
+              <b>{GOAL_TEXT.short}</b>
             </small>
           </div>
         </div>
@@ -198,10 +205,17 @@ export function App() {
           </div>
         </div>
 
-        {/* みんなが「りみっちを覚えている度」。何が起きるかまで常に見せる */}
-        <button type="button" className="recall" onClick={() => setSheet('memory')}>
+        {/*
+          記憶度は目的ではなく手だて。見出しでそう言い切り、
+          「忘れられると手が減る」までを常に見せる。
+        */}
+        <button type="button" className="recall" onClick={() => setSheet('aim')}>
           <span className="recall__title">
-            みんなが りみっち を覚えている度<small>タップで説明</small>
+            <span>
+              <b className="recall__kind">手だて</b>
+              みんなが りみっち を覚えている度
+            </span>
+            <small>タップで説明</small>
           </span>
           {game.partners.map((p) => (
             <span key={p.id} className={`recall__row recall__row--${p.stage}`}>
@@ -249,6 +263,19 @@ export function App() {
         {/* ── 朝 ───────────────────────────── */}
         {state.phase === 'morning' && (
           <>
+            {/* 初日だけ、めあてと手だての区別をはっきり言う */}
+            {state.day === 1 && (
+              <div className="aim">
+                <span className="aim__label">めあて</span>
+                <p className="aim__main">{GOAL_TEXT.aim}</p>
+                <ul className="aim__list">
+                  <li>{GOAL_TEXT.pass}</li>
+                  <li>{GOAL_TEXT.read}</li>
+                  <li>{GOAL_TEXT.means}</li>
+                </ul>
+              </div>
+            )}
+
             {state.event && (
               <div className={`event ${state.event.delta > 0 ? 'is-good' : ''}`}>
                 <span className="event__label">
@@ -649,6 +676,11 @@ export function App() {
         {/* ── おわり ───────────────────────── */}
         {state.phase === 'ending' && state.ending && (
           <section className="panel panel--ending">
+            {/* まず「めあてを達成できたか」。エンドの種類はその説明にすぎない */}
+            <div className={`verdict ${game.goalVerdict.achieved ? 'is-ok' : 'is-ng'}`}>
+              <span className="verdict__aim">{GOAL_TEXT.aim}</span>
+              <span className="verdict__label">{game.goalVerdict.label}</span>
+            </div>
             <h2 className="panel__title">{ENDING_TEXT[state.ending].title}</h2>
             <p className="result">{ENDING_TEXT[state.ending].body}</p>
             <p className="panel__note">
@@ -835,16 +867,28 @@ export function App() {
         </div>
       )}
 
-      {/* ── 記憶のはなし ───────────────────── */}
-      {sheet === 'memory' && (
-        <div className="sheet" role="dialog" aria-label="記憶のはなし">
+      {/* ── めあてと手だて ─────────────────── */}
+      {sheet === 'aim' && (
+        <div className="sheet" role="dialog" aria-label="めあてと手だて">
           <div className="sheet__body">
-            <h2 className="panel__title">記憶のはなし</h2>
+            <h2 className="panel__title">めあてと手だて</h2>
+
+            {/* 何が目的で、何が手だてなのかをいちばん上で決着させる */}
+            <div className="aim">
+              <span className="aim__label">めあて（これだけ）</span>
+              <p className="aim__main">{GOAL_TEXT.aim}</p>
+              <ul className="aim__list">
+                <li>{GOAL_TEXT.pass}</li>
+                <li>{GOAL_TEXT.read}</li>
+              </ul>
+            </div>
+
+            <h3 className="panel__sub">手だて: 記憶度</h3>
             <p className="me__intro">
-              忘れられていくのは <b>りみっち</b> のほう。
+              記憶度は<b>めあてではありません</b>。{GOAL_TEXT.memoryIsMeans}。
               <br />
-              このゲージは「その人が りみっち を覚えている度」で、下がると呼び方が変わり、
-              頼めることが減っていきます。
+              忘れられていくのは <b>りみっち</b> のほう。このゲージは「その人が りみっち を
+              覚えている度」で、下がると呼び方が変わり、頼めることが減っていきます。
             </p>
 
             <ul className="ladder">

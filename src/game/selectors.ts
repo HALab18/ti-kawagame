@@ -1,6 +1,7 @@
 import {
   APATHY_THRESHOLD,
   CHAR_NAMES,
+  ENDING,
   GACHA,
   GIFT,
   MAX_EQUIPPED,
@@ -162,6 +163,16 @@ export function meView(state: GameState): MeView {
 /** 夜の行動はどれも1日1回。すでに何かした後は選べない */
 export function canDoNightAction(state: GameState): boolean {
   return state.phase === 'night' && state.nightAction === null
+}
+
+/**
+ * めあてを達成できたか。
+ * 目的は機嫌ひとつなので、判定もこの1関数で足りる。
+ */
+export function goalVerdict(state: GameState): { achieved: boolean; label: string } {
+  if (state.mood >= ENDING.moodPerfect) return { achieved: true, label: '達成' }
+  if (state.mood >= ENDING.moodOk) return { achieved: true, label: 'まあ達成' }
+  return { achieved: false, label: '未達成' }
 }
 
 /** まきこの機嫌の言葉 */

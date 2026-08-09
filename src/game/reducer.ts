@@ -295,7 +295,19 @@ function applyMany(
   return { memories, deltas: applied, stageChanges }
 }
 
+/**
+ * このゲームの目的は「まきこの機嫌」ひとつ。
+ * 達成側の順位は **機嫌だけ** で決める。
+ *
+ * 忘却エンドとよっぴーエンドは別の勝ち筋ではなく、
+ * 目的を達成できなかったときに「どう失敗したか」を説明するもの。
+ * だから機嫌の判定より **後ろ** に置く(この並び順そのものが仕様の宣言になる)。
+ */
 function judgeEnding(state: GameState): EndingId {
+  if (state.mood >= ENDING.moodPerfect) return 'makikoPerfect'
+  if (state.mood >= ENDING.moodOk) return 'makikoOk'
+
+  // ── ここから下は、めあてを達成できなかった側 ──
   const totalMeets = PARTNER_IDS.reduce((sum, id) => sum + state.meetCounts[id], 0)
   const toyoppiShare = totalMeets > 0 ? state.meetCounts.toyoppi / totalMeets : 0
   const toyoppiRoute =
@@ -304,10 +316,8 @@ function judgeEnding(state: GameState): EndingId {
   if (toyoppiRoute && state.memories.toyoppi.value >= ENDING.toyoppiMemoryMin) {
     return 'toyoppi'
   }
-  if (state.mood >= ENDING.moodPerfect) return 'makikoPerfect'
-  if (state.mood <= ENDING.moodCold) return 'makikoCold'
   if (PARTNER_IDS.some((id) => state.memories[id].stage === 3)) return 'forgotten'
-  if (state.mood >= ENDING.moodOk) return 'makikoOk'
+  if (state.mood <= ENDING.moodCold) return 'makikoCold'
   return 'neutral'
 }
 

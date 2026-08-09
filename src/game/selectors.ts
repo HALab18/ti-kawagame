@@ -5,6 +5,7 @@ import {
   MAX_EQUIPPED,
   MOOD,
   MOOD_MOODS,
+  PLAYER_ID,
   TOTAL_DAYS,
   TOYO,
   WHISPER,
@@ -23,8 +24,13 @@ export type FacePattern =
 
 export interface PartnerView {
   id: PartnerId
-  /** 段階1以降は「あなた」呼びになる */
-  callName: string
+  /** 相手の名前。こちらが忘れるわけではないので、常に本名を出す */
+  name: string
+  /**
+   * その相手が「こちら」をどう呼ぶか。
+   * 記憶度が落ちると りみっち → 「あなた」 になる(忘れられている側はこちら)。
+   */
+  callsYou: string
   memory: number
   stage: ForgetStage
   face: FacePattern
@@ -49,7 +55,8 @@ export function partnerView(state: GameState, id: PartnerId, graceDays: number):
   const m = state.memories[id]
   return {
     id,
-    callName: m.stage >= 1 ? 'あなた' : CHAR_NAMES[id],
+    name: CHAR_NAMES[id],
+    callsYou: m.stage >= 1 ? 'あなた' : CHAR_NAMES[PLAYER_ID],
     memory: m.value,
     stage: m.stage,
     face: FACE_BY_STAGE[m.stage],

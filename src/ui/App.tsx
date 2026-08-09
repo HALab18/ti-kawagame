@@ -253,7 +253,7 @@ export function App() {
                   className="chr--xs"
                 />
                 <p>
-                  <b>{invited.callName}</b>が待っているみたい。
+                  <b>{invited.name}</b>が待っているみたい。
                   <small>応えると思い出しやすい / ほうっておくと余計に忘れられる</small>
                 </p>
               </div>
@@ -342,7 +342,7 @@ export function App() {
                 const d = state.pending?.deltas[p.id] ?? 0
                 return (
                   <li key={p.id}>
-                    <span className="deltas__name">{p.callName}</span>
+                    <span className="deltas__name">{p.name}</span>
                     <span className="deltas__bar">
                       <span className="deltas__fill" style={{ width: `${p.memory}%` }} />
                     </span>
@@ -647,15 +647,18 @@ function PartnerCard({
     <>
       {p.invited && <span className="card__badge">待ってる</span>}
       <Character id={p.id} face={p.face} animated={p.animated} className="chr--sm" />
-      <span className="card__name">{p.callName}</span>
+      <span className="card__name">{p.name}</span>
       <span className="card__bar">
         <span className="card__fill" style={{ width: `${p.memory}%` }} />
       </span>
+      {/* 記憶度は「相手がこちらを覚えている度合い」。呼び方の変化で見せる */}
       <span className="card__meta">
-        {p.stage === 0 && '覚えている'}
-        {p.stage === 1 && '名前が出てこない'}
-        {p.stage === 2 && '表情がすくない'}
-        {p.stage === 3 && (p.inGrace ? 'まだ戻せる' : 'はじめて会う顔')}
+        {p.stage === 3
+          ? p.inGrace
+            ? 'まだ戻せる'
+            : 'こちらを知らない'
+          : `「${p.callsYou}」と呼ぶ`}
+        {p.stage === 2 && <><br />表情がすくない</>}
       </span>
       {p.keepsakes.length > 0 && <span className="card__keep">🫧{p.keepsakes.length}</span>}
       {actionLabel && <span className="card__action">{actionLabel}</span>}

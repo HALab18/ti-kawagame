@@ -1,0 +1,872 @@
+/* ============================================================
+   スマホ最適化の方針
+   - 縦1カラム固定。横スクロールは絶対に出さない
+   - 高さは dvh(アドレスバーの伸縮で崩れない)
+   - スクロールするのは .stage だけ。HUDと操作ボタンは常に見える
+   - 操作系は親指の届く下端に集約し、タップ領域は最低 48px
+   - hover 前提の表現を使わない(:active で押した感を出す)
+   ============================================================ */
+
+:root {
+  --bg: #f6efe4;
+  --bg-panel: #fffdf8;
+  --line: #e2d6c2;
+  --text: #3f382f;
+  --muted: #8b8071;
+  --accent: #e8a06a;
+  --accent-ink: #6b3d1c;
+  --ganbaru: #e9b464;
+  --tanoshii: #7fc4b4;
+  --samishii: #9aa7d0;
+  --up: #4a9e7f;
+  --down: #c47b7b;
+  --radius: 14px;
+  /* ノッチ・ホームバーの回避量。未対応ブラウザでも 0 で成立する */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #221f1c;
+    --bg-panel: #2d2924;
+    --line: #453f37;
+    --text: #ece5d9;
+    --muted: #a79d8d;
+    --accent: #d98f56;
+    --accent-ink: #241205;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* 横向きにしたときに勝手に文字が拡大されるのを防ぐ */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  /* iOS で画面全体がバウンドして下地が見えるのを防ぐ */
+  overscroll-behavior: none;
+}
+
+/* ── レイアウト ───────────────────────────── */
+
+.app {
+  /* dvh: アドレスバーの出入りで高さが変わっても破綻しない */
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  max-width: 480px;
+  margin-inline: auto;
+  /* 480px より広い画面では中央に寄せて枠線を出す */
+  border-inline: 1px solid var(--line);
+}
+
+@media (max-width: 480px) {
+  .app {
+    border-inline: none;
+  }
+}
+
+.hud {
+  padding: calc(var(--safe-t) + 10px) calc(var(--safe-r) + 14px) 10px calc(var(--safe-l) + 14px);
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.stage {
+  /* スクロールするのはここだけ */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 14px calc(var(--safe-r) + 14px) 20px calc(var(--safe-l) + 14px);
+}
+
+.dock {
+  padding: 10px calc(var(--safe-r) + 14px) calc(var(--safe-b) + 12px)
+    calc(var(--safe-l) + 14px);
+  background: var(--bg-panel);
+  border-top: 1px solid var(--line);
+}
+
+/* ── HUD ─────────────────────────────────── */
+
+.hud__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.hud__day {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}
+.hud__day small {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.hud__phase {
+  font-size: 13px;
+  color: var(--muted);
+}
+/* 持ち物シートを開くボタン。数字が主役なのでボタンらしさは抑える */
+.hud__stock {
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gauge__on {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
+  color: var(--text);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* ── まきこのごきげん(このゲームの目的) ───── */
+
+.mood {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.mood.is-good {
+  border-color: color-mix(in srgb, var(--up) 55%, var(--line));
+  background: color-mix(in srgb, var(--up) 10%, var(--bg));
+}
+.mood.is-cold {
+  border-color: color-mix(in srgb, var(--down) 55%, var(--line));
+  background: color-mix(in srgb, var(--down) 10%, var(--bg));
+}
+.mood__main {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.mood__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+.mood__label {
+  color: var(--muted);
+}
+.mood__label b {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.mood__track {
+  position: relative;
+  height: 12px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--line) 70%, transparent);
+  overflow: hidden;
+}
+.mood__fill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--samishii), var(--accent));
+  transition: width 0.4s ease;
+}
+.mood.is-good .mood__fill {
+  background: linear-gradient(90deg, var(--accent), var(--up));
+}
+/* ごほうび圏の目印 */
+.mood__goal {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--text);
+  opacity: 0.35;
+}
+.mood__streak {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.gauges {
+  display: grid;
+  gap: 6px;
+}
+
+.gauge__head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+.gauge__num {
+  font-variant-numeric: tabular-nums;
+}
+.gauge__track {
+  height: 7px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--line) 70%, transparent);
+  overflow: hidden;
+}
+.gauge__fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.35s ease;
+}
+.gauge--ganbaru .gauge__fill {
+  background: var(--ganbaru);
+}
+.gauge--tanoshii .gauge__fill {
+  background: var(--tanoshii);
+}
+.gauge--samishii .gauge__fill {
+  background: var(--samishii);
+}
+
+.warn {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  list-style: none;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--samishii) 18%, transparent);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ── パネル ───────────────────────────────── */
+
+.panel {
+  display: grid;
+  gap: 12px;
+}
+.panel__title {
+  margin: 0;
+  /* 画面幅に応じて可変。小さい端末で折り返しすぎない */
+  font-size: clamp(17px, 4.6vw, 21px);
+  line-height: 1.4;
+}
+.panel__sub {
+  margin: 0;
+  font-size: 15px;
+}
+.panel__note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* ── 誘い ─────────────────────────────────── */
+
+.invite {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--line));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-panel));
+}
+.invite p {
+  margin: 0;
+  display: grid;
+  gap: 2px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.invite small {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ── 突発イベント ─────────────────────────── */
+
+.event {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-left: 4px solid var(--down);
+  border-radius: 4px var(--radius) var(--radius) 4px;
+  background: color-mix(in srgb, var(--down) 12%, var(--bg-panel));
+  animation: shake 0.4s ease-out;
+}
+.event.is-good {
+  border-left-color: var(--up);
+  background: color-mix(in srgb, var(--up) 12%, var(--bg-panel));
+  animation: none;
+}
+.event p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.event__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--down);
+}
+.event.is-good .event__label {
+  color: var(--up);
+}
+.event__delta {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+@keyframes shake {
+  0%, 100% { translate: 0 0; }
+  25% { translate: -4px 0; }
+  75% { translate: 4px 0; }
+}
+
+/* ── まきこの要求 ─────────────────────────── */
+
+.demand {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 60%, var(--line));
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+}
+.demand__label {
+  font-size: 11px;
+  color: var(--muted);
+}
+.demand__said {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.demand__hint {
+  font-size: 12px;
+  color: var(--up);
+  font-weight: 700;
+}
+.demand__hint--vague {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+/* ── 前夜のごきげん増減 ───────────────────── */
+
+.report {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  list-style: none;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--line) 35%, transparent);
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+.report li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.report .is-up {
+  color: var(--up);
+  font-weight: 700;
+}
+.report .is-down {
+  color: var(--down);
+  font-weight: 700;
+}
+
+/* ── タグ(夕方の補足表示) ─────────────────── */
+
+.tag {
+  margin: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--line) 55%, transparent);
+  font-size: 12px;
+}
+.tag--good {
+  background: color-mix(in srgb, var(--up) 22%, transparent);
+  color: var(--up);
+  font-weight: 700;
+}
+
+/* ── 思い出 ───────────────────────────────── */
+
+.keepsakes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.keepsake {
+  width: 100%;
+  display: grid;
+  gap: 4px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  color: inherit;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.keepsake p {
+  margin: 0;
+}
+.keepsake__label {
+  font-size: 11px;
+  color: var(--muted);
+}
+.keepsake--new {
+  border-color: color-mix(in srgb, var(--tanoshii) 60%, var(--line));
+  background: color-mix(in srgb, var(--tanoshii) 12%, var(--bg-panel));
+}
+.keepsake--new small {
+  font-size: 11px;
+  color: var(--muted);
+}
+/* 相手が完全に忘れると思い出も色あせる(戻れば元に戻る) */
+.keepsake.is-faded {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+/* ── 感情チップ ───────────────────────────── */
+
+.chips {
+  display: grid;
+  gap: 10px;
+}
+
+.chip {
+  /* 親指で押せる高さを確保 */
+  min-height: 60px;
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+  text-align: left;
+  border: 2px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  color: inherit;
+}
+.chip.is-on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-panel));
+}
+.chip__name {
+  font-size: 16px;
+  font-weight: 700;
+}
+.chip__note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* ── 二者択一 ─────────────────────────────── */
+
+.choices {
+  display: grid;
+  gap: 12px;
+}
+.choice {
+  min-height: 88px;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 2px 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  color: inherit;
+  text-align: left;
+}
+.choice__icon {
+  grid-row: 1 / 3;
+  font-size: 28px;
+  text-align: center;
+}
+.choice__label {
+  font-size: 17px;
+  font-weight: 700;
+}
+.choice__note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* 夜は選択肢が4つあるので、1画面に収まるよう詰める */
+.choices--night .choice {
+  min-height: 68px;
+  padding: 10px 12px;
+}
+.choices--night .choice__icon {
+  font-size: 22px;
+}
+.choices--night .choice__label {
+  font-size: 15px;
+}
+/* スイーツは「効く手段」なので目立たせる */
+.choice--sweets:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 65%, var(--line));
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-panel));
+}
+/* もちまるの誘いだけ色を落として、選ぶときに一瞬ためらわせる */
+.choice--dark {
+  background: color-mix(in srgb, var(--samishii) 16%, var(--bg-panel));
+  border-color: color-mix(in srgb, var(--samishii) 45%, var(--line));
+}
+
+/* ── 持ち物シート ─────────────────────────── */
+
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  align-items: end;
+  background: rgb(0 0 0 / 0.45);
+  /* 背面のスクロールに指を奪われないようにする */
+  overscroll-behavior: contain;
+}
+.sheet__body {
+  display: grid;
+  gap: 12px;
+  max-height: 82dvh;
+  overflow-y: auto;
+  padding: 18px calc(var(--safe-r) + 16px) calc(var(--safe-b) + 16px) calc(var(--safe-l) + 16px);
+  border-radius: 20px 20px 0 0;
+  background: var(--bg);
+  animation: sheetUp 0.22s ease-out;
+}
+@keyframes sheetUp {
+  from {
+    translate: 0 24px;
+    opacity: 0.4;
+  }
+}
+
+/* ── キャラカード ─────────────────────────── */
+
+.cards {
+  /* 3人なら横並び、狭い端末では自動で折り返す */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 10px;
+}
+
+.card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 10px 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  color: inherit;
+  min-height: 150px;
+  align-content: start;
+}
+.card__name {
+  font-size: 14px;
+  font-weight: 700;
+}
+.card__bar {
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--line) 70%, transparent);
+  overflow: hidden;
+}
+.card__fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width 0.35s ease;
+}
+.card__meta {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.35;
+}
+.card__action {
+  margin-top: 2px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  font-size: 12px;
+}
+.card__badge {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  translate: -50% 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.card.is-invited {
+  border-color: var(--accent);
+}
+.card__keep {
+  font-size: 11px;
+  color: var(--muted);
+}
+/* 忘却が進むと彩度が落ちる */
+.card--2 {
+  filter: saturate(0.7);
+}
+.card--3 {
+  filter: saturate(0.35);
+}
+
+/* ── 夕方の増減表示 ───────────────────────── */
+
+.result {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.result--meet {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.deltas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.deltas li {
+  display: grid;
+  grid-template-columns: 5.5em 1fr 3em;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.deltas__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.deltas__bar {
+  height: 7px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--line) 70%, transparent);
+  overflow: hidden;
+}
+.deltas__fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+.deltas__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.deltas__num.is-up {
+  color: var(--up);
+}
+.deltas__num.is-down {
+  color: var(--down);
+}
+.stagechange {
+  margin: 0;
+  font-size: 13px;
+  color: var(--down);
+}
+
+/* ── ボタン共通 ───────────────────────────── */
+
+button {
+  font: inherit;
+  cursor: pointer;
+  /* タップ時の青いハイライトを消す */
+  -webkit-tap-highlight-color: transparent;
+  /* ダブルタップ拡大を無効化して反応を速くする */
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+button:disabled {
+  opacity: 0.4;
+}
+/* 押した感触はスマホで唯一有効なフィードバック */
+button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+/* hover はマウスがある環境だけに限定する */
+@media (hover: hover) {
+  .chip:hover,
+  .choice:hover,
+  .card:hover:not(:disabled) {
+    border-color: var(--accent);
+  }
+}
+button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.primary {
+  width: 100%;
+  min-height: 52px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  /* 16px 未満だと iOS Safari が勝手にズームする */
+  font-size: 16px;
+  font-weight: 700;
+}
+.link {
+  justify-self: start;
+  padding: 12px 4px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: underline;
+}
+.dock__hint {
+  margin: 0;
+  min-height: 52px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ── キャラクター ─────────────────────────── */
+
+.chr {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.chr--xs {
+  max-width: 46px;
+}
+.chr--sm {
+  max-width: 74px;
+}
+.chr--md {
+  max-width: 132px;
+}
+
+.chr--idle .chr__body {
+  animation: sway 3.4s ease-in-out infinite;
+  transform-origin: 0 100px;
+}
+.chr--idle .chr__eyes {
+  animation: blink 4.6s infinite;
+}
+.chr--bounce {
+  animation: hop 0.5s ease-out 2;
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-1.4deg);
+  }
+  50% {
+    transform: rotate(1.4deg);
+  }
+}
+@keyframes blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+@keyframes hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+}
+
+/* 端末の「視差効果を減らす」設定を尊重する */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 横向き(低い画面)ではHUDを詰めて操作部を確保する */
+@media (orientation: landscape) and (max-height: 480px) {
+  .hud {
+    padding-block: 6px;
+  }
+  .hud__day {
+    font-size: 18px;
+  }
+  .gauge__head {
+    font-size: 10px;
+  }
+  .card {
+    min-height: 0;
+  }
+}

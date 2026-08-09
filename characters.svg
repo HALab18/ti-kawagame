@@ -1,0 +1,56 @@
+<svg width="680" height="400" viewBox="0 0 680 400" xmlns="http://www.w3.org/2000/svg">
+<!-- りみっち: 主人公・がんばり屋 -->
+<g id="rimicchi" transform="translate(90,100)">
+<ellipse cx="-32" cy="70" rx="9" ry="14" fill="#f4e4c1"/>
+<ellipse cx="32" cy="70" rx="9" ry="14" fill="#f4e4c1"/>
+<circle cx="0" cy="45" r="58" fill="#f4e4c1"/>
+<ellipse cx="-40" cy="20" rx="9" ry="6" fill="#f4e4c1"/>
+<ellipse cx="40" cy="20" rx="9" ry="6" fill="#f4e4c1"/>
+<circle cx="-16" cy="42" r="4.5" fill="#3a3a3a"/>
+<circle cx="16" cy="42" r="4.5" fill="#3a3a3a"/>
+<path d="M -8 56 Q 0 60 8 56" stroke="#3a3a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+<ellipse cx="-27" cy="52" rx="6" ry="4" fill="#f0c9c9" opacity="0.7"/>
+<ellipse cx="27" cy="52" rx="6" ry="4" fill="#f0c9c9" opacity="0.7"/>
+</g>
+
+<!-- ぴす: 元気・突撃キャラ -->
+<g id="pisu" transform="translate(260,100)">
+<ellipse cx="-32" cy="72" rx="8" ry="13" fill="#fbeaf0"/>
+<ellipse cx="32" cy="72" rx="8" ry="13" fill="#fbeaf0"/>
+<circle cx="0" cy="48" r="54" fill="#fbeaf0"/>
+<ellipse cx="-16" cy="-8" rx="8" ry="32" fill="#fbeaf0" transform="rotate(-10 -16 -8)"/>
+<ellipse cx="16" cy="-8" rx="8" ry="32" fill="#fbeaf0" transform="rotate(10 16 -8)"/>
+<circle cx="-15" cy="46" r="4.5" fill="#3a3a3a"/>
+<circle cx="15" cy="46" r="4.5" fill="#3a3a3a"/>
+<path d="M -7 60 Q 0 64 7 60" stroke="#3a3a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+<ellipse cx="-25" cy="56" rx="6" ry="4" fill="#f0b8c8" opacity="0.7"/>
+<ellipse cx="25" cy="56" rx="6" ry="4" fill="#f0b8c8" opacity="0.7"/>
+</g>
+
+<!-- まきこ: しっかり者・裏で苦労人 -->
+<g id="makiko" transform="translate(430,100)">
+<ellipse cx="-32" cy="72" rx="8" ry="13" fill="#d8e8e4"/>
+<ellipse cx="32" cy="72" rx="8" ry="13" fill="#d8e8e4"/>
+<circle cx="0" cy="45" r="55" fill="#d8e8e4"/>
+<path d="M -50 20 Q 0 5 50 20" stroke="#8fb5ac" stroke-width="3" fill="none" stroke-linecap="round"/>
+<circle cx="-15" cy="46" r="3.5" fill="#3a3a3a"/>
+<circle cx="15" cy="46" r="3.5" fill="#3a3a3a"/>
+<path d="M -7 58 L 7 58" stroke="#3a3a3a" stroke-width="2" stroke-linecap="round"/>
+</g>
+
+<!-- とよっぴー: マイペース・不穏担当 -->
+<g id="toyoppi" transform="translate(590,100)">
+<ellipse cx="-30" cy="72" rx="8" ry="12" fill="#fdfaf3"/>
+<ellipse cx="30" cy="72" rx="8" ry="12" fill="#fdfaf3"/>
+<circle cx="0" cy="46" r="56" fill="#fdfaf3"/>
+<circle cx="-14" cy="46" r="3" fill="#3a3a3a"/>
+<circle cx="14" cy="46" r="3" fill="#3a3a3a"/>
+<ellipse cx="-24" cy="58" rx="6" ry="4" fill="#f5e0d8" opacity="0.6"/>
+<ellipse cx="24" cy="58" rx="6" ry="4" fill="#f5e0d8" opacity="0.6"/>
+</g>
+
+<text x="90" y="215" text-anchor="middle" font-family="sans-serif" font-size="14">りみっち</text>
+<text x="260" y="215" text-anchor="middle" font-family="sans-serif" font-size="14">ぴす</text>
+<text x="430" y="215" text-anchor="middle" font-family="sans-serif" font-size="14">まきこ</text>
+<text x="590" y="215" text-anchor="middle" font-family="sans-serif" font-size="14">とよっぴー</text>
+</svg>

@@ -49,7 +49,25 @@ export type DemandId =
  * 夜にできることは1つだけ。何を選んだか。
  * pisuTalk は「昼にぴすに会った日」だけ選べる、ぴすの特技。
  */
-export type NightActionId = 'rest' | 'gift' | 'sweets' | 'keepsake' | 'whisper' | 'pisuTalk'
+export type NightActionId =
+  | 'rest'
+  | 'gift'
+  | 'sweets'
+  | 'keepsake'
+  | 'whisper'
+  | 'pisuTalk'
+  | 'gacha'
+
+/** ぴすがガチャガチャで引いてくる景品 */
+export type PrizeId =
+  | 'kuma'
+  | 'usagi'
+  | 'neko'
+  | 'hoshi'
+  | 'hana'
+  | 'tsuki'
+  | 'ribon'
+  | 'ringo'
 
 export interface MemoryState {
   /** 0〜100 */
@@ -135,6 +153,14 @@ export interface GameState {
   demandSaid: string
   /** とよっぴーに何日会っていないか。溜まると怒ってまきこの機嫌が下がる */
   toyoNeglect: number
+  /** まきこが本当に好きな景品。開始時に決まる隠しパラメータ */
+  makikoLikes: PrizeId[]
+  /** 引いて反応を見たことで「好きだ」と分かった景品 */
+  knownLikes: PrizeId[]
+  /** これまでに引いた景品(かぶり判定に使う) */
+  drawnPrizes: PrizeId[]
+  /** 直近のガチャ結果。夜の演出に使う */
+  lastPrize: { prize: PrizeId; hit: boolean; repeat: boolean } | null
   /** 昨夜の機嫌の増減とその理由(朝に見せる) */
   moodReport: Array<{ delta: number; reason: string }>
   /** 今朝起きた突発イベント(たいてい理不尽) */
@@ -173,6 +199,8 @@ export type GameAction =
   | { type: 'whisper' }
   /** 夜: ぴすに今日のことを話してもらう(昼にぴすに会った日だけ) */
   | { type: 'pisuTalk' }
+  /** 夜: ぴすにガチャガチャを回してもらう */
+  | { type: 'gacha' }
   /** ご褒美を1つ選ぶ */
   | { type: 'chooseReward'; reward: RewardId }
   /** 夜: 就寝。自然減少を適用して翌朝へ */

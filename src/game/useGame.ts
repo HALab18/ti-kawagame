@@ -29,6 +29,7 @@ export function useGame(seed = 1) {
       showKeepsake: (keepsakeId: string) => dispatch({ type: 'showKeepsake', keepsakeId }),
       whisper: () => dispatch({ type: 'whisper' }),
       pisuTalk: () => dispatch({ type: 'pisuTalk' }),
+      gacha: () => dispatch({ type: 'gacha' }),
       chooseReward: (reward: RewardId) => dispatch({ type: 'chooseReward', reward }),
       sleep: () => dispatch({ type: 'sleep' }),
       reset: (nextSeed?: number) => dispatch({ type: 'reset', seed: nextSeed }),

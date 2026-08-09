@@ -547,6 +547,108 @@ body {
   border-color: color-mix(in srgb, var(--accent) 65%, var(--line));
   background: color-mix(in srgb, var(--accent) 14%, var(--bg-panel));
 }
+/* ガチャは賭けなので、少しきらびやかに */
+.choice--gacha:not(:disabled) {
+  border-color: color-mix(in srgb, var(--tanoshii) 60%, var(--line));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--tanoshii) 16%, var(--bg-panel)),
+    color-mix(in srgb, var(--accent) 12%, var(--bg-panel))
+  );
+}
+
+/* ── ガチャの結果 ─────────────────────────── */
+
+.prize {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 16px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+}
+.prize.is-hit {
+  border-color: var(--up);
+  background: color-mix(in srgb, var(--up) 12%, var(--bg-panel));
+}
+.prize__emoji {
+  font-size: 52px;
+  line-height: 1.1;
+  animation: pop 0.45s ease-out;
+}
+.prize__name {
+  font-size: 15px;
+  font-weight: 700;
+}
+.prize__judge {
+  font-size: 12px;
+  color: var(--muted);
+}
+.prize.is-hit .prize__judge {
+  color: var(--up);
+  font-weight: 700;
+}
+@keyframes pop {
+  0% {
+    scale: 0.4;
+    rotate: -12deg;
+  }
+  60% {
+    scale: 1.12;
+  }
+  100% {
+    scale: 1;
+    rotate: 0deg;
+  }
+}
+
+/* ── 好きなもの図鑑 ───────────────────────── */
+
+.book {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+}
+.book__item {
+  display: grid;
+  grid-template-columns: 22px 1fr 16px;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 12px;
+  /* 未判明はシルエットのまま */
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+.book__item.is-liked {
+  border-color: var(--up);
+  background: color-mix(in srgb, var(--up) 12%, transparent);
+  filter: none;
+  opacity: 1;
+}
+.book__item.is-tried {
+  filter: grayscale(1);
+  opacity: 0.75;
+}
+.book__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.book__mark {
+  text-align: right;
+  color: var(--muted);
+}
+.book__item.is-liked .book__mark {
+  color: var(--up);
+}
+
 /* もちまるの誘いだけ色を落として、選ぶときに一瞬ためらわせる */
 .choice--dark {
   background: color-mix(in srgb, var(--samishii) 16%, var(--bg-panel));

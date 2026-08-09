@@ -3,11 +3,13 @@ import {
   CHAR_NAMES,
   EMOTION_IDS,
   EMOTION_NAMES,
+  GACHA,
   GIFT,
   KEEPSAKE,
   MAX_EQUIPPED,
   MOOD_MAX,
   PISU_TALK,
+  PRIZES,
   REST,
   REWARDS,
   REWARD_STREAK,
@@ -17,12 +19,14 @@ import {
 } from '../game/config'
 import { demandText, has, keepsakeLimit } from '../game/reducer'
 import {
+  canGacha,
   canGift,
   canGiveSweets,
   canPisuTalk,
   canShowKeepsake,
   canWhisper,
   isFaded,
+  prizeBook,
   streakToReward,
 } from '../game/selectors'
 import type { PartnerView } from '../game/selectors'
@@ -378,7 +382,25 @@ export function App() {
             <h2 className="panel__title">夜</h2>
 
             {state.nightAction !== null ? (
-              <p className="result">{state.log.at(-1)?.text}</p>
+              <>
+                {/* ガチャの結果は当たり外れが一目で分かるように大きく出す */}
+                {state.nightAction === 'gacha' && state.lastPrize && (
+                  <div className={`prize ${state.lastPrize.hit ? 'is-hit' : ''}`}>
+                    <span className="prize__emoji" aria-hidden="true">
+                      {PRIZES[state.lastPrize.prize].emoji}
+                    </span>
+                    <span className="prize__name">{PRIZES[state.lastPrize.prize].name}</span>
+                    <span className="prize__judge">
+                      {state.lastPrize.hit
+                        ? state.lastPrize.repeat
+                          ? '好きなやつ（でも持ってる）'
+                          : 'あたり! これが好きだった'
+                        : 'これは好きではなかった'}
+                    </span>
+                  </div>
+                )}
+                <p className="result">{state.log.at(-1)?.text}</p>
+              </>
             ) : nightMode === 'menu' ? (
               <>
                 <p className="panel__note">できるのは、ひとつだけ。</p>
@@ -393,6 +415,22 @@ export function App() {
                     <span className="choice__label">スイーツをあげる</span>
                     <span className="choice__note">
                       ごきげん +{SWEETS.moodGain}（所持 {state.sweets}）
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="choice choice--gacha"
+                    disabled={!canGacha(state)}
+                    onClick={game.gacha}
+                  >
+                    <span className="choice__icon" aria-hidden="true">🎰</span>
+                    <span className="choice__label">ぴすにガチャを回してもらう</span>
+                    <span className="choice__note">
+                      🌾{GACHA.itemCost} → 好きなものを当てれば +{GACHA.hitMood}、はずれは +
+                      {GACHA.missMood}
+                      {state.knownLikes.length > 0 &&
+                        `（判明: ${state.knownLikes.map((p) => PRIZES[p].emoji).join('')}）`}
                     </span>
                   </button>
 
@@ -603,6 +641,25 @@ export function App() {
                 </ul>
               </>
             )}
+            <h3 className="panel__sub">まきこの好きなもの</h3>
+            <p className="panel__note">
+              当てたものだけ分かる。×は引いてみて違ったもの。
+            </p>
+            <ul className="book">
+              {prizeBook(state).map((p) => (
+                <li
+                  key={p.id}
+                  className={`book__item ${p.liked ? 'is-liked' : p.tried ? 'is-tried' : ''}`}
+                >
+                  <span aria-hidden="true">{p.emoji}</span>
+                  <span className="book__name">
+                    {p.liked ? p.name : p.tried ? `${p.name}（ちがった）` : '?'}
+                  </span>
+                  <span className="book__mark">{p.liked ? '♥' : p.tried ? '×' : ''}</span>
+                </li>
+              ))}
+            </ul>
+
             <h3 className="panel__sub">思い出</h3>
             <ul className="keepsakes">
               {state.keepsakes.length === 0 && (

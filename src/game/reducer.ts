@@ -8,6 +8,7 @@ import {
   ENDING,
   EVENTS,
   EVENT_CHANCE,
+  GACHA,
   GAUGE_MAX,
   GAUGE_MIN,
   GIFT,
@@ -29,6 +30,8 @@ import {
   NIGHT,
   PARTNER_IDS,
   PISU_TALK,
+  PRIZES,
+  PRIZE_IDS,
   REST,
   REWARDS,
   REWARD_EFFECT,
@@ -52,6 +55,7 @@ import type {
   Keepsake,
   MemoryState,
   PartnerId,
+  PrizeId,
   RewardId,
 } from './types'
 
@@ -140,6 +144,19 @@ function pickRewardOffer(state: GameState, seed: number): { offer: RewardId[] | 
   return { offer: [first, second], seed: b.seed }
 }
 
+/** まきこが好きな景品を決める。プレイヤーには見えない */
+function pickLikes(seed: number): { likes: PrizeId[]; seed: number } {
+  const pool = [...PRIZE_IDS]
+  const likes: PrizeId[] = []
+  let s = seed
+  for (let i = 0; i < GACHA.likeCount && pool.length > 0; i++) {
+    const r = nextRandom(s)
+    s = r.seed
+    likes.push(pool.splice(Math.floor(r.value * pool.length) % pool.length, 1)[0])
+  }
+  return { likes, seed: s }
+}
+
 export function createInitialState(seed = 1): GameState {
   const memories = {} as Record<PartnerId, MemoryState>
   const meetCounts = {} as Record<PartnerId, number>
@@ -172,6 +189,10 @@ export function createInitialState(seed = 1): GameState {
     demand: 'visit',
     demandSaid: DEMAND_LINES[0].text,
     toyoNeglect: 0,
+    makikoLikes: [],
+    knownLikes: [],
+    drawnPrizes: [],
+    lastPrize: null,
     moodReport: [],
     event: null,
     moodStreak: 0,
@@ -184,12 +205,14 @@ export function createInitialState(seed = 1): GameState {
   }
   const first = pickInvitation(base)
   const d = pickDemand(first.seed)
+  const likes = pickLikes(d.seed)
   return {
     ...base,
     invitation: first.partner,
     demand: d.demand,
     demandSaid: d.said,
-    seed: d.seed,
+    makikoLikes: likes.likes,
+    seed: likes.seed,
   }
 }
 
@@ -534,6 +557,46 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         clear
           ? 'ぴすが今日あったことを、まきこに話してくれた。まきこは笑っていた。'
           : 'ぴすが話してくれたが、うまく思い出せないようだった。',
+      )
+    }
+
+    // ── 夜: ぴすにガチャを回してもらう ─────────────
+    case 'gacha': {
+      if (!nightGuard(state) || state.items < GACHA.itemCost) return state
+      // ぴすが忘れかけていると、頼みごとが通らない
+      if (state.memories.pisu.stage > GACHA.clearStage) return state
+
+      const r = nextRandom(state.seed)
+      const prize = PRIZE_IDS[Math.floor(r.value * PRIZE_IDS.length) % PRIZE_IDS.length]
+      const hit = state.makikoLikes.includes(prize)
+      const repeat = state.drawnPrizes.includes(prize)
+      const gain = hit ? (repeat ? GACHA.repeatHitMood : GACHA.hitMood) : GACHA.missMood
+
+      return logged(
+        {
+          ...state,
+          nightAction: 'gacha',
+          nightTarget: 'pisu',
+          seed: r.seed,
+          items: state.items - GACHA.itemCost,
+          mood: clampMood(state.mood + gain),
+          drawnPrizes: repeat ? state.drawnPrizes : [...state.drawnPrizes, prize],
+          // 当たったものだけ「好きだ」と判明する
+          knownLikes:
+            hit && !state.knownLikes.includes(prize)
+              ? [...state.knownLikes, prize]
+              : state.knownLikes,
+          lastPrize: { prize, hit, repeat },
+          moodReport: [
+            ...state.moodReport,
+            { delta: gain, reason: `ぴすが${PRIZES[prize].name}を引いてきた` },
+          ],
+        },
+        hit
+          ? repeat
+            ? `ぴすが${PRIZES[prize].name}を引いてきた。まきこは「持ってるけど」と言いつつ受け取った。`
+            : `ぴすが${PRIZES[prize].name}を引いてきた。まきこの目が変わった。これは好きなやつだ。`
+          : `ぴすが${PRIZES[prize].name}を引いてきた。まきこは「ありがとう」とだけ言った。`,
       )
     }
 

@@ -4,7 +4,7 @@
  *
  *   npm run sim
  */
-import { PARTNER_IDS, REWARDS, TOTAL_DAYS } from '../src/game/config'
+import { GACHA, PARTNER_IDS, PRIZE_IDS, REWARDS, TOTAL_DAYS } from '../src/game/config'
 import { createInitialState, gameReducer } from '../src/game/reducer'
 import type { EmotionId, GameAction, GameState, PartnerId, RewardId } from '../src/game/types'
 
@@ -39,6 +39,11 @@ function obey(s: GameState): PartnerId | null {
 
 /** 機嫌を最優先する夜の使い方 */
 function moodNight(s: GameState): GameAction {
+  // 機嫌に余裕がある日は、ガチャで「好きなもの」を探しておく。
+  // 当たりが分からないうちは投資、分かってからは回収というつもり。
+  if (s.items >= GACHA.itemCost && s.mood >= 60 && s.drawnPrizes.length < PRIZE_IDS.length) {
+    return { type: 'gacha' }
+  }
   // ぴすに会った日は取りなしてもらうのがいちばん効く
   if (s.pending?.kind === 'meet' && s.pending.partner === 'pisu') return { type: 'pisuTalk' }
   if (s.demand === 'gift' && s.sweets > 0) return { type: 'giveSweets' }
@@ -84,6 +89,12 @@ const strategies: Strategy[] = [
     equip: () => ['ganbaru'],
     meet: () => null,
     night: (s) => (s.sweets > 0 ? { type: 'giveSweets' } : { type: 'rest' }),
+  },
+  {
+    name: 'ガチャに全部つぎこむ',
+    equip: () => ['ganbaru'],
+    meet: () => null,
+    night: (s) => (s.items >= 2 ? { type: 'gacha' } : { type: 'rest' }),
   },
   {
     name: 'とよっぴーに逃げる',
@@ -138,6 +149,10 @@ for (const strategy of strategies) {
   console.log(`  ごきげん: ${runs.map((r) => r.mood).join(', ')}`)
   console.log(
     `  seed=1: 記憶度 ${PARTNER_IDS.map((id) => `${id}:${last.memories[id].value}`).join(' ')}`,
+  )
+  console.log(
+    `  seed=1: 好きなもの ${last.makikoLikes.join('/')}` +
+      ` (判明 ${last.knownLikes.join('/') || 'なし'} / 引いた ${last.drawnPrizes.length}種)`,
   )
   console.log(
     `  seed=1: ごほうび ${last.rewards.map((r) => REWARDS[r].name).join('/') || 'なし'}` +

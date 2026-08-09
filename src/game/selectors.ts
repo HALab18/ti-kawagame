@@ -1,11 +1,14 @@
 import {
   APATHY_THRESHOLD,
   CHAR_NAMES,
+  GACHA,
   GIFT,
   MAX_EQUIPPED,
   MOOD,
   MOOD_MOODS,
   PLAYER_ID,
+  PRIZES,
+  PRIZE_IDS,
   TOTAL_DAYS,
   TOYO,
   WHISPER,
@@ -92,6 +95,28 @@ export function canPisuTalk(state: GameState): boolean {
 
 export function canShowKeepsake(state: GameState): boolean {
   return canDoNightAction(state) && state.keepsakes.length > 0
+}
+
+/** ガチャはぴすに頼むので、ぴすが覚えていて仕込みが足りているときだけ */
+export function canGacha(state: GameState): boolean {
+  return (
+    canDoNightAction(state) &&
+    state.items >= GACHA.itemCost &&
+    state.memories.pisu.stage <= GACHA.clearStage
+  )
+}
+
+/**
+ * 好きなもの図鑑。当てた景品だけ名前が分かり、それ以外は「?」のまま。
+ * 引いたが好きではなかったものは「ちがった」として除外できる。
+ */
+export function prizeBook(state: GameState) {
+  return PRIZE_IDS.map((id) => ({
+    id,
+    ...PRIZES[id],
+    liked: state.knownLikes.includes(id),
+    tried: state.drawnPrizes.includes(id),
+  }))
 }
 
 /** 「忘れても大丈夫だよ」は、とよっぴーがまだ覚えているうちだけ聞ける */

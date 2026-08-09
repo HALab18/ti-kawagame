@@ -1,4 +1,12 @@
-import type { CharId, DemandId, EmotionId, ForgetStage, PartnerId, RewardId } from './types'
+import type {
+  CharId,
+  DemandId,
+  EmotionId,
+  ForgetStage,
+  PartnerId,
+  PrizeId,
+  RewardId,
+} from './types'
 
 /**
  * 数値はすべてここに集約する。バランス調整でロジックを触らないための境界。
@@ -143,6 +151,40 @@ export const REST = {
   ganbaruGain: 25,
   samishiiDrop: 5,
 } as const
+
+/**
+ * ぴすのガチャガチャ。
+ * まきこが本当に好きなものは開始時にランダムで決まり、プレイヤーには見えない。
+ * 引いた反応(機嫌の伸び)で「これは好きだ」と分かっていくので、
+ * 周回するほど狙って当てられるようになる。
+ */
+export const GACHA = {
+  /** 仕込みをこれだけ渡して回してもらう */
+  itemCost: 2,
+  /** 好きなものを初めて引いたとき */
+  hitMood: 25,
+  /** 好きなものだが、すでに持っているとき(喜びは薄れる) */
+  repeatHitMood: 8,
+  /** 好きではなかったとき。それでも気持ちは伝わる */
+  missMood: 3,
+  /** ぴすがこの段階を超えて忘れていると頼めない */
+  clearStage: 1,
+  /** まきこが好きな景品の数 */
+  likeCount: 2,
+} as const
+
+export const PRIZES: Record<PrizeId, { name: string; emoji: string }> = {
+  kuma: { name: 'くまのフィギュア', emoji: '🧸' },
+  usagi: { name: 'うさぎのキーホルダー', emoji: '🐰' },
+  neko: { name: 'ねこのマスコット', emoji: '🐱' },
+  hoshi: { name: '星のブローチ', emoji: '⭐' },
+  hana: { name: '花のヘアピン', emoji: '🌸' },
+  tsuki: { name: '月のチャーム', emoji: '🌙' },
+  ribon: { name: 'リボンのバッジ', emoji: '🎀' },
+  ringo: { name: 'りんごのミニポーチ', emoji: '🍎' },
+}
+
+export const PRIZE_IDS = Object.keys(PRIZES) as PrizeId[]
 
 /**
  * とよっぴーは まきこの母。

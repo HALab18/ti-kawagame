@@ -214,9 +214,62 @@ body {
   color: var(--muted);
 }
 
-.gauges {
+/* ── りみっち(プレイヤー本人) ─────────────── */
+
+/*
+  3つの感情ゲージは「りみっちの状態」。
+  本人の絵とひとことを同じ枠に入れて、誰の数字なのかを明示する。
+*/
+.me {
   display: grid;
   gap: 6px;
+  margin-bottom: 8px;
+  padding: 7px 10px 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.me__who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.me__who .chr {
+  max-width: 34px;
+  flex: 0 0 auto;
+}
+.me__name {
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 700;
+}
+.me__name small {
+  margin-left: 6px;
+  font-weight: 400;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.me__line {
+  margin: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.me__intro {
+  margin: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.gauges {
+  /* 3本を横並びにして、下の記憶ゲージぶんの高さを空ける */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
 }
 
 .gauge__head {
@@ -248,6 +301,88 @@ body {
 }
 .gauge--samishii .gauge__fill {
   background: var(--samishii);
+}
+
+/* ── 記憶度(みんなが りみっち を覚えている度) ── */
+
+/*
+  数字だけ出しても意味が伝わらないゲージなので、
+  1行ごとに「今それで何が起きているか」を必ず添える。
+*/
+.recall {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 9px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: inherit;
+  text-align: left;
+}
+.recall__title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.recall__title small {
+  font-size: 10px;
+  text-decoration: underline;
+}
+.recall__row {
+  display: grid;
+  grid-template-columns: 4.2em minmax(24px, 1fr) 1.8em auto;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+.recall__name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recall__bar {
+  height: 5px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--line) 70%, transparent);
+  overflow: hidden;
+}
+.recall__fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--tanoshii);
+  transition: width 0.35s ease;
+}
+.recall__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.recall__effect {
+  max-width: 11.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  color: var(--muted);
+}
+/* 忘れられてきたら色で警告する */
+.recall__row--1 .recall__fill {
+  background: var(--ganbaru);
+}
+.recall__row--2 .recall__fill,
+.recall__row--3 .recall__fill {
+  background: var(--down);
+}
+.recall__row--2 .recall__effect,
+.recall__row--3 .recall__effect {
+  color: var(--down);
 }
 
 .warn {
@@ -761,11 +896,21 @@ body {
   font-weight: 700;
 }
 .card__bar {
+  position: relative;
   width: 100%;
   height: 5px;
   border-radius: 3px;
   background: color-mix(in srgb, var(--line) 70%, transparent);
   overflow: hidden;
+}
+/* 段階のしきい値。あとどれだけ余裕があるかを目で分かるようにする */
+.card__tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: var(--text);
+  opacity: 0.3;
 }
 .card__fill {
   display: block;
@@ -779,6 +924,21 @@ body {
   color: var(--muted);
   text-align: center;
   line-height: 1.35;
+}
+.card__mem {
+  font-size: 10.5px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.card__effect {
+  color: var(--tanoshii);
+}
+.card__next {
+  color: var(--down);
+}
+.card--2 .card__effect,
+.card--3 .card__effect {
+  color: var(--down);
 }
 .card__action {
   margin-top: 2px;
@@ -829,6 +989,25 @@ body {
   text-align: center;
 }
 
+/* 会いに行ったのは りみっち。二人を並べて出す */
+.pair {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+}
+.pair__mark {
+  padding-bottom: 26px;
+  font-size: 18px;
+  color: var(--muted);
+}
+
+.deltas__title {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
 .deltas {
   margin: 0;
   padding: 0;
@@ -836,9 +1015,14 @@ body {
   display: grid;
   gap: 8px;
 }
+.deltas__name small {
+  font-size: 10.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
 .deltas li {
   display: grid;
-  grid-template-columns: 5.5em 1fr 3em;
+  grid-template-columns: 6.5em 1fr 3em;
   align-items: center;
   gap: 8px;
   font-size: 13px;
@@ -875,6 +1059,93 @@ body {
   margin: 0;
   font-size: 13px;
   color: var(--down);
+}
+
+/* ── 記憶のはなし(シート内) ───────────────── */
+
+/* しきい値と、そこで実際に変わることを1行ずつ並べる */
+.ladder {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+.ladder__row {
+  display: grid;
+  grid-template-columns: 5.5em 1fr;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--line) 30%, transparent);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.ladder__at {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ladder__row--1 {
+  background: color-mix(in srgb, var(--ganbaru) 20%, transparent);
+}
+.ladder__row--2,
+.ladder__row--3 {
+  background: color-mix(in srgb, var(--down) 18%, transparent);
+}
+
+.mlist {
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.mlist__item {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+.mlist__main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.mlist__name {
+  font-size: 13px;
+  font-weight: 700;
+}
+.mlist__name b {
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.mlist__name small {
+  margin-left: 6px;
+  font-weight: 400;
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.mlist__role {
+  color: var(--muted);
+}
+.mlist__effect {
+  color: var(--tanoshii);
+}
+.mlist__next {
+  color: var(--down);
+}
+
+.mhow {
+  margin: 0 0 16px;
+  padding-left: 1.2em;
+  font-size: 12px;
+  line-height: 1.7;
 }
 
 /* ── ボタン共通 ───────────────────────────── */
@@ -1004,6 +1275,20 @@ button:focus-visible {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* 背の低い端末では HUD の説明文を落として、遊ぶ場所を確保する */
+@media (max-height: 720px) {
+  .me__line {
+    display: none;
+  }
+  .recall__title {
+    display: none;
+  }
+  .me,
+  .recall {
+    padding-block: 6px;
   }
 }
 

@@ -44,6 +44,59 @@ export const INITIAL_EMOTIONS: Record<EmotionId, number> = {
 
 export const INITIAL_MEMORY = 85
 
+/**
+ * ══ 記憶度 ══
+ * 「その相手が **りみっち** を覚えている度合い」。忘れられる側はこちら。
+ *
+ * ゲージだけ置いても意味が伝わらないので、次の2点を必ず守る:
+ *  1. 段階ごとに「今できなくなること」が1つ以上ある(MEMORY_NEXT)
+ *  2. 目的(まきこの機嫌)に直結する経路がある(MEMORY_TRUST)
+ */
+
+/**
+ * まきこがこちらを忘れているほど、要求に応えても喜ばない。
+ * これが「記憶度を保つ理由」の本線。
+ */
+export const MEMORY_TRUST: Record<ForgetStage, number> = {
+  0: 1,
+  1: 0.6,
+  2: 0.35,
+  3: 0.2,
+}
+
+/** 忘却段階の見え方 */
+export const STAGE_LABEL: Record<ForgetStage, string> = {
+  0: '名前で呼んでくれる',
+  1: '「あなた」と呼ぶ',
+  2: '表情がすくない',
+  3: 'こちらを知らない',
+}
+
+/** 相手ごとに「覚えていてもらえると何ができるか」 */
+export const MEMORY_ROLE: Record<PartnerId, string> = {
+  pisu: 'ガチャと取りなしを頼める',
+  makiko: '応えたときに喜んでくれる',
+  toyoppi: '「大丈夫だよ」を聞ける',
+}
+
+/**
+ * その段階に落ちたとき、実際に失うもの。
+ * まきこは MEMORY_TRUST から文言を組むので持たない。
+ */
+export const MEMORY_NEXT: Record<PartnerId, Partial<Record<ForgetStage, string>>> = {
+  pisu: {
+    1: '名前で呼ばれなくなる',
+    2: 'ガチャも取りなしも頼めなくなる',
+    3: '誘ってこなくなる',
+  },
+  makiko: {},
+  toyoppi: {
+    1: '「大丈夫だよ」が聞けなくなる',
+    2: '表情がなくなる',
+    3: '誘ってこなくなる',
+  },
+}
+
 /** 作業(WORK)時のゲージ変動 */
 export const WORK = {
   /** 基礎収穫量。がんばるゲージと装備で増える */

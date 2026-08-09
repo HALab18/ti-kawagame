@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { GRACE_DAYS, PARTNER_IDS } from './config'
 import { createInitialState, gameReducer, successRate } from './reducer'
-import { moodLabel, partnerView, warnings } from './selectors'
+import { meView, moodLabel, partnerView, warnings } from './selectors'
 import {
   clearArchive,
   clearGame,
@@ -110,6 +110,7 @@ export function useGame(seed = 1) {
     state,
     archive,
     partners,
+    me: meView(state),
     warnings: warnings(state),
     moodLabel: moodLabel(state),
     successRate: successRate(state),

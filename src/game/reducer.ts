@@ -23,6 +23,7 @@ import {
   KEEPSAKE_TEXTS,
   MAX_EQUIPPED,
   MEET,
+  MEMORY_TRUST,
   MOOD,
   MOOD_COLD,
   MOOD_GOOD,
@@ -36,6 +37,7 @@ import {
   REWARDS,
   REWARD_EFFECT,
   REWARD_STREAK,
+  STAGE_LABEL,
   STAGE_THRESHOLDS,
   SWEETS,
   TOTAL_DAYS,
@@ -672,7 +674,21 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           break
       }
 
-      // ② 嫉妬。母(とよっぴー)に会うのは怒られない。ぴすが取りなした日も起きない
+      // ② 記憶度と目的をつなぐ本線。
+      // まきこがこちらを忘れているほど、要求に応えても喜びが小さくなる。
+      // 減った分は独立した行として出し、原因が記憶度だと読めるようにする。
+      const trust = MEMORY_TRUST[state.memories.makiko.stage]
+      if (trust < 1 && report.length > 0 && report[0].delta > 0) {
+        const kept = Math.round(report[0].delta * trust)
+        const cut = kept - report[0].delta
+        report[0] = { ...report[0], delta: kept }
+        push(
+          cut,
+          `まきこは${STAGE_LABEL[state.memories.makiko.stage]}（喜び ${Math.round(trust * 100)}%）`,
+        )
+      }
+
+      // ③ 嫉妬。母(とよっぴー)に会うのは怒られない。ぴすが取りなした日も起きない
       const jealousDemand = state.demand === 'visit' || state.demand === 'gift'
       if (
         jealousDemand &&
@@ -684,7 +700,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         push(MOOD.jealousy, `${CHAR_NAMES[metPartner]}のほうを選んだ`)
       }
 
-      // ③ とよっぴー(まきこの母)。顔を出さないと怒り、まきこがその分を被る
+      // ④ とよっぴー(まきこの母)。顔を出さないと怒り、まきこがその分を被る
       const toyoNeglect = metPartner === 'toyoppi' ? 0 : state.toyoNeglect + 1
       if (metPartner === 'toyoppi') {
         push(TOYO.visitMoodGain, 'とよっぴーに顔を出した')
@@ -695,7 +711,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const moodDelta = report.reduce((sum, r) => sum + r.delta, 0)
       const mood = clampMood(state.mood + moodDelta)
 
-      // ③ 記憶度の自然減少。機嫌がよいと、まきこが皆に声をかけてくれる
+      // ⑤ 記憶度の自然減少。機嫌がよいと、まきこが皆に声をかけてくれる
       const relief =
         (mood >= MOOD.goodFrom ? MOOD_GOOD.decayRelief : 0) +
         (has(state, 'letter') ? REWARD_EFFECT.letterRelief : 0)
@@ -715,7 +731,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           (state.equipped.includes('samishii') ? NIGHT.samishiiEquipGain : 0),
       )
 
-      // ④ 機嫌がいい状態で寝た連続日数
+      // ⑥ 機嫌がいい状態で寝た連続日数
       const moodStreak = mood >= MOOD.goodFrom ? state.moodStreak + 1 : 0
 
       const slept: GameState = {
@@ -753,7 +769,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         return { ...slept, day: state.day, phase: 'ending', ending: judgeEnding(slept) }
       }
 
-      // ⑤ 翌朝の突発イベント(たいてい理不尽)
+      // ⑦ 翌朝の突発イベント(たいてい理不尽)
       const ev = pickEvent(slept.seed)
       const withEvent: GameState = ev.event
         ? {
@@ -767,7 +783,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
           }
         : { ...slept, seed: ev.seed, event: null }
 
-      // ⑥ 誘いと要求を決める
+      // ⑧ 誘いと要求を決める
       const invited = pickInvitation(withEvent)
       const d = pickDemand(invited.seed)
       const nextMorning: GameState = {
@@ -778,7 +794,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         seed: d.seed,
       }
 
-      // ⑦ 機嫌をキープできていればご褒美(2択)
+      // ⑨ 機嫌をキープできていればご褒美(2択)
       if (nextMorning.moodStreak > 0 && nextMorning.moodStreak % REWARD_STREAK === 0) {
         const offer = pickRewardOffer(nextMorning, nextMorning.seed)
         if (offer.offer) {

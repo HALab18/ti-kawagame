@@ -8,12 +8,18 @@ import {
   GIFT,
   KEEPSAKE,
   MAX_EQUIPPED,
+  MEET,
+  MEMORY_TRUST,
+  MOOD,
+  MOOD_GOOD,
   MOOD_MAX,
+  NIGHT,
   PISU_TALK,
   PRIZES,
   REST,
   REWARDS,
   REWARD_STREAK,
+  STAGE_THRESHOLDS,
   SWEETS,
   TOTAL_DAYS,
   WHISPER,
@@ -31,7 +37,7 @@ import {
   streakToReward,
 } from '../game/selectors'
 import type { PartnerView } from '../game/selectors'
-import type { EmotionId, EndingId, PartnerId } from '../game/types'
+import type { EmotionId, EndingId, ForgetStage, PartnerId } from '../game/types'
 import { useGame } from '../game/useGame'
 import { Character } from './Character'
 
@@ -68,7 +74,37 @@ const GAUGE_NOTE: Record<EmotionId, string> = {
   samishii: '会えたときの回復が増える(溜まると無気力)',
 }
 
+/** 記憶度バーに引く段階の目盛り。ここを下回ると呼び方や頼めることが変わる */
+const STAGE_MARKS = [STAGE_THRESHOLDS[0], STAGE_THRESHOLDS[1], STAGE_THRESHOLDS[2]]
+
+/** 記憶度の段階のはしご。しきい値と、そこで実際に変わることを並べて見せる */
+const LADDER: Array<{ stage: ForgetStage; at: string; what: string }> = [
+  { stage: 0, at: `${STAGE_THRESHOLDS[0]}〜100`, what: '名前で呼んでくれる。ぜんぶ頼める' },
+  {
+    stage: 1,
+    at: `${STAGE_THRESHOLDS[1]}〜${STAGE_THRESHOLDS[0] - 1}`,
+    what: '「あなた」と呼ばれる。とよっぴーの話は聞けない',
+  },
+  {
+    stage: 2,
+    at: `${STAGE_THRESHOLDS[2]}〜${STAGE_THRESHOLDS[1] - 1}`,
+    what: '表情が消える。ぴすに頼みごとが通らない',
+  },
+  {
+    stage: 3,
+    at: `${STAGE_THRESHOLDS[2] - 1} 以下`,
+    what: '初対面に戻る。誘ってこない・思い出が色あせる',
+  },
+].map((row) => ({
+  ...row,
+  stage: row.stage as ForgetStage,
+  // まきこの記憶度は目的に直結しているので、段ごとの目減りも書いておく
+  what: `${row.what}（まきこなら喜び ${Math.round(MEMORY_TRUST[row.stage as ForgetStage] * 100)}%）`,
+}))
+
 type NightMode = 'menu' | 'gift' | 'keepsake'
+/** 下から出るシート。持ち物と、記憶の説明 */
+type SheetId = 'stock' | 'memory' | null
 
 export function App() {
   const game = useGame()
@@ -77,7 +113,7 @@ export function App() {
   const [draft, setDraft] = useState<EmotionId[]>([])
   const [picking, setPicking] = useState(false)
   const [nightMode, setNightMode] = useState<NightMode>('menu')
-  const [sheet, setSheet] = useState(false)
+  const [sheet, setSheet] = useState<SheetId>(null)
 
   const toggle = (e: EmotionId) =>
     setDraft((prev) =>
@@ -101,7 +137,7 @@ export function App() {
             <small> / {TOTAL_DAYS}日</small>
           </span>
           <span className="hud__phase">{phaseLabel(state.phase)}</span>
-          <button type="button" className="hud__stock" onClick={() => setSheet(true)}>
+          <button type="button" className="hud__stock" onClick={() => setSheet('stock')}>
             🌾{state.items} 🍰{state.sweets} 🫧{state.keepsakes.length}
           </button>
         </div>
@@ -129,22 +165,55 @@ export function App() {
           </div>
         </div>
 
-        <div className="gauges">
-          {EMOTION_IDS.map((id) => (
-            <div key={id} className={`gauge gauge--${id}`}>
-              <div className="gauge__head">
-                <span>
-                  {EMOTION_NAMES[id]}
-                  {state.equipped.includes(id) && <b className="gauge__on">装備中</b>}
-                </span>
-                <span className="gauge__num">{state.emotions[id]}</span>
+        {/* 動かしているのは りみっち。3つのゲージが誰のものか分かるよう本人と並べる */}
+        <div className="me">
+          <div className="me__who">
+            <Character
+              id="rimicchi"
+              face={game.me.face}
+              animated={game.me.animated}
+              className="chr--xs"
+            />
+            <span className="me__name">
+              {game.me.name}
+              <small>{game.me.job}・あなた</small>
+            </span>
+            <p className="me__line">{game.me.line}</p>
+          </div>
+          <div className="gauges">
+            {EMOTION_IDS.map((id) => (
+              <div key={id} className={`gauge gauge--${id}`}>
+                <div className="gauge__head">
+                  <span>
+                    {EMOTION_NAMES[id]}
+                    {state.equipped.includes(id) && <b className="gauge__on">装備中</b>}
+                  </span>
+                  <span className="gauge__num">{state.emotions[id]}</span>
+                </div>
+                <div className="gauge__track">
+                  <div className="gauge__fill" style={{ width: `${state.emotions[id]}%` }} />
+                </div>
               </div>
-              <div className="gauge__track">
-                <div className="gauge__fill" style={{ width: `${state.emotions[id]}%` }} />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
+
+        {/* みんなが「りみっちを覚えている度」。何が起きるかまで常に見せる */}
+        <button type="button" className="recall" onClick={() => setSheet('memory')}>
+          <span className="recall__title">
+            みんなが りみっち を覚えている度<small>タップで説明</small>
+          </span>
+          {game.partners.map((p) => (
+            <span key={p.id} className={`recall__row recall__row--${p.stage}`}>
+              <span className="recall__name">{p.name}</span>
+              <span className="recall__bar">
+                <span className="recall__fill" style={{ width: `${p.memory}%` }} />
+              </span>
+              <span className="recall__num">{p.memory}</span>
+              <span className="recall__effect">{p.effect}</span>
+            </span>
+          ))}
+        </button>
 
         {game.warnings.length > 0 && (
           <ul className="warn">
@@ -231,7 +300,7 @@ export function App() {
             )}
 
             <section className="panel">
-              <h2 className="panel__title">今日はどんな気持ちでいる?</h2>
+              <h2 className="panel__title">りみっちは今日、どんな気持ちでいる?</h2>
               <p className="panel__note">最大{MAX_EQUIPPED}つまで。選ばずに進んでもいい。</p>
               <div className="chips">
                 {EMOTION_IDS.map((id) => {
@@ -281,7 +350,7 @@ export function App() {
               <div className="choices">
                 <button type="button" className="choice" onClick={() => game.work()}>
                   <span className="choice__icon" aria-hidden="true">🍱</span>
-                  <span className="choice__label">お弁当屋の仕事をする</span>
+                  <span className="choice__label">りみっちのお弁当屋で働く</span>
                   <span className="choice__note">
                     仕込みが増える / スイーツを仕入れられることがある(
                     {Math.round(SWEETS.findChance * 100)}%)
@@ -290,7 +359,9 @@ export function App() {
                 <button type="button" className="choice" onClick={() => setPicking(true)}>
                   <span className="choice__icon" aria-hidden="true">💬</span>
                   <span className="choice__label">誰かに会いに行く</span>
-                  <span className="choice__note">記憶度が戻る / まきこ以外だと嫉妬されることも</span>
+                  <span className="choice__note">
+                    りみっちを思い出してもらえる / まきこ以外だと嫉妬されることも
+                  </span>
                 </button>
               </div>
             </section>
@@ -332,12 +403,25 @@ export function App() {
               </p>
             ) : (
               <div className="result result--meet">
-                <Character
-                  id={state.pending.partner!}
-                  face={faceOf(game.partners, state.pending.partner!)}
-                  bounce={state.pending.success === true}
-                  className="chr--md"
-                />
+                {/* 会いに行ったのは りみっち。二人を並べて「会った」を絵で見せる */}
+                <div className="pair">
+                  <Character
+                    id="rimicchi"
+                    face={game.me.face}
+                    animated={game.me.animated}
+                    bounce={state.pending.success === true}
+                    className="chr--md"
+                  />
+                  <span className="pair__mark" aria-hidden="true">
+                    {state.pending.success ? '♪' : '…'}
+                  </span>
+                  <Character
+                    id={state.pending.partner!}
+                    face={faceOf(game.partners, state.pending.partner!)}
+                    bounce={state.pending.success === true}
+                    className="chr--md"
+                  />
+                </div>
                 <p>
                   {CHAR_NAMES[state.pending.partner!]}に会った。
                   <br />
@@ -352,12 +436,15 @@ export function App() {
               </div>
             )}
 
+            <p className="deltas__title">みんなが りみっち を覚えている度</p>
             <ul className="deltas">
               {game.partners.map((p) => {
                 const d = state.pending?.deltas[p.id] ?? 0
                 return (
                   <li key={p.id}>
-                    <span className="deltas__name">{p.name}</span>
+                    <span className="deltas__name">
+                      {p.name} <small>{p.memory}</small>
+                    </span>
                     <span className="deltas__bar">
                       <span className="deltas__fill" style={{ width: `${p.memory}%` }} />
                     </span>
@@ -438,8 +525,9 @@ export function App() {
                     <span className="choice__icon" aria-hidden="true">🎰</span>
                     <span className="choice__label">ぴすにガチャを回してもらう</span>
                     <span className="choice__note">
-                      🌾{GACHA.itemCost} → 好きなものを当てれば +{GACHA.hitMood}、はずれは +
-                      {GACHA.missMood}
+                      {state.memories.pisu.stage > GACHA.clearStage
+                        ? 'ぴすがりみっちを忘れていて、頼みごとが通らない'
+                        : `🌾${GACHA.itemCost} → 好きなものを当てれば +${GACHA.hitMood}、はずれは +${GACHA.missMood}`}
                       {state.knownLikes.length > 0 &&
                         `（判明: ${state.knownLikes.map((p) => PRIZES[p].emoji).join('')}）`}
                     </span>
@@ -475,7 +563,7 @@ export function App() {
                     <span className="choice__icon" aria-hidden="true">🎁</span>
                     <span className="choice__label">贈り物をする</span>
                     <span className="choice__note">
-                      🌾{GIFT.itemCost} → 記憶度 +{GIFT.memoryGain}
+                      🌾{GIFT.itemCost} → 覚えている度 +{GIFT.memoryGain}
                     </span>
                   </button>
 
@@ -488,7 +576,7 @@ export function App() {
                     <span className="choice__icon" aria-hidden="true">🫧</span>
                     <span className="choice__label">思い出の話をする</span>
                     <span className="choice__note">
-                      記憶度 +{KEEPSAKE.showGain}（所持 {state.keepsakes.length}/
+                      覚えている度 +{KEEPSAKE.showGain}（所持 {state.keepsakes.length}/
                       {keepsakeLimit(state)}）
                     </span>
                   </button>
@@ -502,7 +590,7 @@ export function App() {
                     <span className="choice__icon" aria-hidden="true">🌙</span>
                     <span className="choice__label">とよっぴーの話を聞く</span>
                     <span className="choice__note">
-                      さみしい -{WHISPER.samishiiDrop} / みんなの記憶度 -{WHISPER.memoryCost}
+                      さみしい -{WHISPER.samishiiDrop} / みんなの覚えている度 -{WHISPER.memoryCost}
                     </span>
                   </button>
                 </div>
@@ -664,7 +752,7 @@ export function App() {
         {state.phase === 'reward' && <p className="dock__hint">どちらか受け取る</p>}
       </nav>
 
-      {sheet && (
+      {sheet === 'stock' && (
         <div className="sheet" role="dialog" aria-label="持ち物">
           <div className="sheet__body">
             <h2 className="panel__title">持ち物</h2>
@@ -728,7 +816,7 @@ export function App() {
             <p className="panel__note">
               進行は自動で保存されます（この端末のブラウザ内）。
             </p>
-            <button type="button" className="primary" onClick={() => setSheet(false)}>
+            <button type="button" className="primary" onClick={() => setSheet(null)}>
               とじる
             </button>
             <button
@@ -737,11 +825,70 @@ export function App() {
               onClick={() => {
                 if (confirm('この周を捨てて最初からやり直しますか?（攻略メモは残ります）')) {
                   game.reset(Date.now() % 100000)
-                  setSheet(false)
+                  setSheet(null)
                 }
               }}
             >
               最初からやり直す
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── 記憶のはなし ───────────────────── */}
+      {sheet === 'memory' && (
+        <div className="sheet" role="dialog" aria-label="記憶のはなし">
+          <div className="sheet__body">
+            <h2 className="panel__title">記憶のはなし</h2>
+            <p className="me__intro">
+              忘れられていくのは <b>りみっち</b> のほう。
+              <br />
+              このゲージは「その人が りみっち を覚えている度」で、下がると呼び方が変わり、
+              頼めることが減っていきます。
+            </p>
+
+            <ul className="ladder">
+              {LADDER.map((row) => (
+                <li key={row.stage} className={`ladder__row ladder__row--${row.stage}`}>
+                  <span className="ladder__at">{row.at}</span>
+                  <span className="ladder__what">{row.what}</span>
+                </li>
+              ))}
+            </ul>
+
+            <h3 className="panel__sub">いま起きていること</h3>
+            <ul className="mlist">
+              {game.partners.map((p) => (
+                <li key={p.id} className="mlist__item">
+                  <Character id={p.id} face={p.face} animated={false} className="chr--xs" />
+                  <div className="mlist__main">
+                    <span className="mlist__name">
+                      {p.name} <b>{p.memory}</b>
+                      <small>{p.stageLabel}</small>
+                    </span>
+                    <span className="mlist__role">覚えていてくれると: {p.role}</span>
+                    <span className="mlist__effect">いま: {p.effect}</span>
+                    {p.nextLoss && (
+                      <span className="mlist__next">
+                        あと −{p.nextLoss.drop} で{p.nextLoss.text}
+                      </span>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <h3 className="panel__sub">戻す手だて</h3>
+            <ul className="mhow">
+              <li>会いに行く（+{MEET.memoryGain} / 待っていた相手なら ×1.5）</li>
+              <li>夜に贈り物（🌾{GIFT.itemCost} → +{GIFT.memoryGain}）</li>
+              <li>夜に思い出の話（+{KEEPSAKE.showGain}・切り札。1回で消える）</li>
+              <li>まきこの機嫌が {MOOD.goodFrom} 以上だと、毎晩の忘却が {MOOD_GOOD.decayRelief} ゆるくなる</li>
+              <li>何もしない夜は、全員 −{NIGHT.memoryDecay}</li>
+            </ul>
+
+            <button type="button" className="primary" onClick={() => setSheet(null)}>
+              とじる
             </button>
           </div>
         </div>
@@ -766,17 +913,28 @@ function PartnerCard({
       {p.invited && <span className="card__badge">待ってる</span>}
       <Character id={p.id} face={p.face} animated={p.animated} className="chr--sm" />
       <span className="card__name">{p.name}</span>
+      {/* 記憶度は「相手が りみっち を覚えている度合い」。
+          目盛りを引いて、あとどれだけで段階が落ちるかを見えるようにする */}
       <span className="card__bar">
         <span className="card__fill" style={{ width: `${p.memory}%` }} />
+        {STAGE_MARKS.map((v) => (
+          <i key={v} className="card__tick" style={{ left: `${v}%` }} />
+        ))}
       </span>
-      {/* 記憶度は「相手がこちらを覚えている度合い」。呼び方の変化で見せる */}
       <span className="card__meta">
-        {p.stage === 3
-          ? p.inGrace
-            ? 'まだ戻せる'
-            : 'こちらを知らない'
-          : `「${p.callsYou}」と呼ぶ`}
-        {p.stage === 2 && <><br />表情がすくない</>}
+        <b className="card__mem">りみっちを覚えている {p.memory}</b>
+        <br />
+        {p.stage === 3 && p.inGrace ? 'まだ戻せる' : `「${p.callsYou}」と呼ぶ`}
+        <br />
+        <span className="card__effect">{p.effect}</span>
+        {p.nextLoss && (
+          <>
+            <br />
+            <span className="card__next">
+              あと −{p.nextLoss.drop} で{p.nextLoss.text}
+            </span>
+          </>
+        )}
       </span>
       {p.keepsakes.length > 0 && <span className="card__keep">🫧{p.keepsakes.length}</span>}
       {actionLabel && <span className="card__action">{actionLabel}</span>}

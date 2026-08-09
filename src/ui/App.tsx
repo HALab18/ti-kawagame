@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import {
   CHAR_NAMES,
+  DEMAND_HINT,
   EMOTION_IDS,
   EMOTION_NAMES,
   GACHA,
@@ -202,6 +203,16 @@ export function App() {
                   {demand.candidates.length > 1
                     ? `${demand.candidates.length}通りある: ${demand.candidates.join(' / ')}`
                     : demand.candidates[0]}
+                </span>
+              )}
+
+              {/* 前の周回で答え合わせした記録。周回するほど読めるようになる */}
+              {game.lineMemo.length > 0 && (
+                <span className="demand__memo">
+                  📓 前までの記録:{' '}
+                  {game.lineMemo
+                    .map((m) => `${DEMAND_HINT[m.demand]} ${m.count}回`)
+                    .join(' / ')}
                 </span>
               )}
             </div>
@@ -556,6 +567,41 @@ export function App() {
               まきこのごきげん {state.mood} / ごほうび {state.rewards.length}個 / 残った思い出{' '}
               {state.keepsakes.length}つ / 「大丈夫だよ」{state.whispers}回
             </p>
+
+            {/* 何で失点したかを見せる。次の周回の狙いがここで決まる */}
+            {game.moodBreakdown.losses.length > 0 && (
+              <>
+                <h3 className="panel__sub">ごきげんを落とした原因</h3>
+                <ul className="rank">
+                  {game.moodBreakdown.losses.slice(0, 5).map((r) => (
+                    <li key={r.reason}>
+                      <span className="rank__reason">{r.reason}</span>
+                      <span className="rank__times">{r.times}回</span>
+                      <span className="rank__total is-down">{r.total}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {game.moodBreakdown.gains.length > 0 && (
+              <>
+                <h3 className="panel__sub">効いた手</h3>
+                <ul className="rank">
+                  {game.moodBreakdown.gains.slice(0, 3).map((r) => (
+                    <li key={r.reason}>
+                      <span className="rank__reason">{r.reason}</span>
+                      <span className="rank__times">{r.times}回</span>
+                      <span className="rank__total is-up">+{r.total}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            <p className="panel__note">
+              これまで {game.archive.runs} 周 / 最高ごきげん {game.archive.bestMood} /
+              覚えたセリフ {Object.keys(game.archive.lines).length} 種
+            </p>
             <div className="cards">
               {game.partners.map((p) => (
                 <PartnerCard key={p.id} p={p} />
@@ -679,8 +725,23 @@ export function App() {
                 </li>
               ))}
             </ul>
+            <p className="panel__note">
+              進行は自動で保存されます（この端末のブラウザ内）。
+            </p>
             <button type="button" className="primary" onClick={() => setSheet(false)}>
               とじる
+            </button>
+            <button
+              type="button"
+              className="link"
+              onClick={() => {
+                if (confirm('この周を捨てて最初からやり直しますか?（攻略メモは残ります）')) {
+                  game.reset(Date.now() % 100000)
+                  setSheet(false)
+                }
+              }}
+            >
+              最初からやり直す
             </button>
           </div>
         </div>

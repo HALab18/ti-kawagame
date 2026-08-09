@@ -193,6 +193,8 @@ export function createInitialState(seed = 1): GameState {
     knownLikes: [],
     drawnPrizes: [],
     lastPrize: null,
+    moodLog: [],
+    revealedLines: [],
     moodReport: [],
     event: null,
     moodStreak: 0,
@@ -729,6 +731,15 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         apathy: samishii >= APATHY_THRESHOLD,
         mood,
         moodReport: report,
+        moodLog: [
+          ...state.moodLog,
+          ...report.map((r) => ({ day: state.day, delta: r.delta, reason: r.reason })),
+        ],
+        // 就寝時点で「今日の言い方が何だったか」が確定するので、攻略メモに残す
+        revealedLines: [
+          ...state.revealedLines,
+          { said: state.demandSaid, demand: state.demand },
+        ],
         moodStreak,
         toyoNeglect,
         emotions: {

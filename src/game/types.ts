@@ -163,6 +163,13 @@ export interface GameState {
   lastPrize: { prize: PrizeId; hit: boolean; repeat: boolean } | null
   /** 昨夜の機嫌の増減とその理由(朝に見せる) */
   moodReport: Array<{ delta: number; reason: string }>
+  /** 30日ぶんの増減の記録。おわりに「何で失点したか」を集計する */
+  moodLog: Array<{ day: number; delta: number; reason: string }>
+  /**
+   * 「この言い方は実はこの要求だった」の記録。
+   * 就寝時=答え合わせが済んだ時点で積み、周回をまたいで持ち越す。
+   */
+  revealedLines: Array<{ said: string; demand: DemandId }>
   /** 今朝起きた突発イベント(たいてい理不尽) */
   event: { text: string; delta: number } | null
   /** 機嫌がいい状態で寝た連続日数 */

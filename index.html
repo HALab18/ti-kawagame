@@ -11,10 +11,24 @@
     <meta name="theme-color" content="#221f1c" media="(prefers-color-scheme: dark)" />
     <!-- ホーム画面に追加したときにブラウザUIを隠す -->
     <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <title>かわいい島の記憶生活(仮)</title>
-    <script type="module" crossorigin src="./assets/index-BX4naIlf.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-9OQVbJrL.css">
+    <!-- iOS のホーム画面に出るアプリ名 -->
+    <meta name="apple-mobile-web-app-title" content="まきこ" />
+
+    <!--
+      アイコンは public/icon.svg が原本。サイズ違いは `npm run icons` で書き出す。
+      パスを相対にしてあるのは GitHub Pages のサブパス配信でも解決させるため。
+    -->
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+    <!-- iOS は SVG も manifest のアイコンも見ないので、これが必須 -->
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+
+    <title>まきこのごきげん</title>
+    <script type="module" crossorigin src="./assets/index-CmkF7Z3L.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-suVqJLcJ.css">
   </head>
   <body>
     <div id="root"></div>
